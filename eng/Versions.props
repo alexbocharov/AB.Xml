@@ -6,8 +6,8 @@
     <PatchVersion>0</PatchVersion>
     <VersionPrefix>$(MajorVersion).$(MinorVersion).$(PatchVersion)</VersionPrefix>
     <PreReleaseVersionLabel></PreReleaseVersionLabel>
-    <DefaultTargetFramework>net8.0</DefaultTargetFramework>
-    <AllTargetFrameworks>$(DefaultTargetFramework);net9.0</AllTargetFrameworks>
+    <DefaultTargetFramework>net10.0</DefaultTargetFramework>
+    <AllTargetFrameworks>$(DefaultTargetFramework);net8.0;net9.0</AllTargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>

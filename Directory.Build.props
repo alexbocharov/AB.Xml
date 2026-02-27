@@ -6,7 +6,7 @@
     <Copyright>Copyright (c) 2025 Alexander Bocharov</Copyright>
     <Authors>Alexander Bocharov</Authors>
     <Company>AB</Company>
-    <PackageProjectUrl>https://github.com/alexbocharov/xml-toolkit</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/alexbocharov/AB.Xml</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
