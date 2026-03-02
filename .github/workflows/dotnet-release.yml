@@ -39,7 +39,7 @@ jobs:
 
     - name: Publish NuGet packages as artifacts (for release)
       if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: nuget-packages
         if-no-files-found: error
