@@ -3,71 +3,86 @@ name: .NET release
 on:
   push:
     tags:
-      - "v*"
+      - "v*" # Triggers only on version tags (e.g., v1.0.0)
 
 jobs:
-  publish:
-    strategy:
-      matrix:
-        os: [Windows-latest, ubuntu-latest]
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
+  build-and-pack:
+    runs-on: ubuntu-latest
     permissions:
-      id-token: write
-
+      id-token: write # Required for Trusted Publishing to NuGet
     env:
       DOTNET_CONFIGURATION: Release
 
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0 # Essential for correct versioning
+
     - name: Setup Runtimes, Caching
       uses: ./.github/actions/setup-runtimes-caching
       with:
-        name: "Full"
+        name: "Release"
 
-    - name: Restore dependencies
-      run: dotnet restore
+    - name: Extract Version from Tag
+      id: get_version
+      # Removes 'v' prefix from tag (v1.0.0 -> 1.0.0)
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      shell: bash
 
-    - name: Build
-      run: dotnet build --configuration ${{ env.DOTNET_CONFIGURATION }}
+    - name: Build and Pack
+      # We combine build and pack for efficiency. 
+      # Version is passed explicitly to override eng/Versions.props
+      run: >
+        dotnet pack 
+        --configuration ${{ env.DOTNET_CONFIGURATION }} 
+        --output artifacts
+        -p:Version=${{ steps.get_version.outputs.VERSION }}
+        -p:ContinuousIntegrationBuild=true
 
-    - name: Test
-      run: dotnet test --configuration ${{ env.DOTNET_CONFIGURATION }} --no-build --verbosity normal
+    - name: Run Tests
+      # Quick check before publishing to ensure the release is stable
+      run: dotnet test --configuration ${{ env.DOTNET_CONFIGURATION }} --no-build
 
-    - name: Pack
-      run: dotnet pack --configuration Release --no-restore --no-build --output artifacts -p:Version=${{ steps.get_version.outputs.VERSION }}
-
-    - name: Publish NuGet packages as artifacts (for release)
-      if: runner.os == 'Linux'
-      uses: actions/upload-artifact@v7
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v8
       with:
         name: nuget-packages
-        if-no-files-found: error
         path: artifacts/*.nupkg
 
-  release:
-    needs: publish
+  github-release:
+    needs: build-and-pack
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to create a Release entry
     steps:
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
           name: nuget-packages
 
-      - name: Release
-        uses: softprops/action-gh-release@v3
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          files: |
-            ./*.nupkg
+          files: ./*.nupkg
+          generate_release_notes: true # Automated changelog from commits
 
   publish-nuget:
-    needs: publish
+    needs: build-and-pack
     runs-on: ubuntu-latest
+    # Recommended: use a specific environment for approvals
+    environment: production 
     steps:
       - name: Download packages
         uses: actions/download-artifact@v8
         with:
           name: nuget-packages
 
-      - name: Publish on NuGet
-        run: dotnet nuget push ./*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Publish to NuGet
+        # If using Trusted Publishing, API Key is not needed. 
+        # Otherwise, keep the secret as a fallback.
+        run: >
+          dotnet nuget push ./*.nupkg 
+          --source https://api.nuget.org/v3/index.json 
+          --api-key ${{ secrets.NUGET_API_KEY }} 
+          --skip-duplicate

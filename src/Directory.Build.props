@@ -1,25 +1,27 @@
 <Project>
-
+  <!-- Inherit core properties from the root -->
   <Import Project="../Directory.Build.props" />
 
   <PropertyGroup>
+    <!-- Use target frameworks defined in eng/Versions.props -->
     <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks>
     <IsPackable>true</IsPackable>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="$(PackageIconFullPath)" Pack="true" PackagePath="\" />
-  </ItemGroup>
-
-  <PropertyGroup>
+    
+    <!-- Branding Assets configuration -->
+    <SharedDir>$(MSBuildThisFileDirectory)Shared\</SharedDir>
+    <PackageIconFileName>AB_256x.png</PackageIconFileName>
+    <PackageIconFullPath>$(SharedDir)$(PackageIconFileName)</PackageIconFullPath>
+    <PackageIcon>$(PackageIconFileName)</PackageIcon>
+    
+    <!-- Shared tags for library discoverability -->
+    <PackageTags>abforge;xml;dotnet;$(AdditionalPackageTags)</PackageTags>
+    
+    <!-- Quality Gates -->
     <DefaultWarningsAsErrors>$(WarningsAsErrors);CS1591;CS1573;CS1712</DefaultWarningsAsErrors>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SourceLink for GitHub debugging experience -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
+  </ItemGroup>
 </Project>

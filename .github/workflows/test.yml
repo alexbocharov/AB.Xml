@@ -2,48 +2,52 @@ name: Test
 
 on:
   workflow_call:
+    inputs:
+      runs_on:
+        required: true
+        type: string
+      configuration:
+        required: false
+        type: string
+        default: 'Release'
 
 jobs:
   test:
-    strategy:
-      matrix:
-        os: [Windows-latest, ubuntu-latest, macOS-latest]
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
-    env:
-      DOTNET_CONFIGURATION: Release
-
+    runs-on: ${{ inputs.runs_on }}
     steps:
     - uses: actions/checkout@v6
+
     - name: Setup Runtimes, Caching
       uses: ./.github/actions/setup-runtimes-caching
       with:
-        name: "Full"
-
-    - name: Restore dependencies
-      run: dotnet restore
-
-    - name: Build
-      run: dotnet build --configuration ${{ env.DOTNET_CONFIGURATION }}
+        name: "Test"
 
     - name: Run tests
+      # We use --no-build because the project was already built in build-main.yml
+      # Note: This requires artifacts download if build and test are in separate jobs
       run: >-
         dotnet test 
-        --configuration ${{ env.DOTNET_CONFIGURATION }}
-        --logger "console;verbosity=normal"
-        --logger "trx"
+        --configuration ${{ inputs.configuration }}
         --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
-        --blame
-        --blame-hang-timeout 7m
+        --logger "trx;LogFileName=test-results.trx"
         --blame-crash
+        --blame-hang-timeout 5m
         --results-directory testresults
         --collect "XPlat Code Coverage"
         --no-restore
-        --no-build -- RunConfiguration.CollectSourceInformation=true
-    
-    - name: Upload test results artifact
+        -- RunConfiguration.CollectSourceInformation=true
+
+    - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v8
       with:
-        name: testresults-${{ matrix.name }}-${{ matrix.os }}
-        path: testresults/**
+        # Unique name for each OS to prevent overwriting
+        name: test-results-${{ inputs.runs_on }}
+        path: testresults/**/*.trx
+
+    - name: Upload coverage to Codecov
+      if: always()
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }} # Required for private repos
+        fail_ci_if_error: false

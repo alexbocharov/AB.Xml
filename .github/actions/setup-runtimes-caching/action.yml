@@ -1,23 +1,26 @@
 name: "Setup Runtimes, Caching"
-description: "Setup .NET and cache dependencies"
+description: "Configures .NET SDKs and manages NuGet dependency caching"
 inputs:
   name:
-    description: "The name of the environment to configure"
+    description: "Environment identifier (e.g., Build, Test, Release)"
     required: true
+
 runs:
   using: "composite"
   steps:
-    - name: Setup .NET
+    - name: Setup .NET SDKs
       uses: actions/setup-dotnet@v4
       with:
+        # Installing multiple SDKs to support multi-targeting (net8.0, net9.0, net10.0)
         dotnet-version: |
           8.0.x
           9.0.x
           10.0.x
-    - name: Cache NuGet packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.nuget/packages
-        key: ${{ runner.os }}-nuget-${{ hashFiles('Directory.Packages.props') }}
-        restore-keys: |
-          ${{ runner.os }}-nuget-
+        # Using built-in caching for improved reliability across OS matrix
+        cache: true
+        # Track all project and configuration files to trigger cache invalidation
+        cache-dependency-path: |
+          **/Directory.Packages.props
+          **/Directory.Build.props
+          **/*.csproj
+          **/global.json

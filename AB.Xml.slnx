@@ -1,8 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/AB.Xml/AB.Xml.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/AB.Xml.Tests/AB.Xml.Tests.csproj" />
-  </Folder>
-</Solution>

@@ -2,15 +2,30 @@ name: Publish NuGet Packages
 
 on:
   workflow_call:
+    # We use secrets inheritance to access NUGET_API_KEY from the caller
+    secrets:
+      NUGET_API_KEY:
+        required: true
 
 jobs:
-  publish-nuget:
+  publish:
+    name: Push to NuGet.org
     runs-on: ubuntu-latest
+    # Using 'production' environment allows for manual approvals and secret protection
+    environment: production 
+    
     steps:
-    - name: Download packages
+    - name: Download NuGet Artifacts
       uses: actions/download-artifact@v8
       with:
         name: nuget-packages
 
-    - name: Publish to NuGet
-      run: dotnet nuget push ./*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} --skip-duplicate
+    - name: Publish Packages
+      # 'skip-duplicate' is essential to prevent workflow failure if version exists
+      # We use 'bash' shell for consistent behavior
+      shell: bash
+      run: |
+        dotnet nuget push "./*.nupkg" \
+          --source "https://api.nuget.org/v3/index.json" \
+          --api-key "${{ secrets.NUGET_API_KEY }}" \
+          --skip-duplicate

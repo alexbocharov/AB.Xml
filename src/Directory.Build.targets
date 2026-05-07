@@ -1,10 +1,12 @@
 <Project>
+  <!-- Inherit the root targets logic (like README packing) -->
   <Import Project="..\Directory.Build.targets" />
 
-  <PropertyGroup>
-    <SharedDir>$(MSBuildThisFileDirectory)Shared\</SharedDir>
-    <PackageIconFullPath>$(SharedDir)AB_256x.png</PackageIconFullPath>
-    <PackageIcon>AB_256x.png</PackageIcon>
-    <PackageTags>ab abtoolkit $(AdditionalPackageTags)</PackageTags>
-  </PropertyGroup>
+  <ItemGroup>
+    <!-- Include the centralized brand icon in every package -->
+    <None Include="$(PackageIconFullPath)" 
+          Pack="true" 
+          PackagePath="\" 
+          Condition="'$(IsPackable)' == 'true' And Exists('$(PackageIconFullPath)')" />
+  </ItemGroup>
 </Project>

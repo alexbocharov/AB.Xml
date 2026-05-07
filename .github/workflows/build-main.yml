@@ -7,45 +7,64 @@ on:
     paths-ignore:
       - '**/*.gitignore'
       - '**/*.gitattributes'
-    workflow_dispatch:
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      # Allows manual trigger of a stable release without suffix
+      isRelease:
+        description: 'Check to publish as a stable version (no suffix)'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
+  # Single build job to produce artifacts for all OS tests
   build:
-    strategy:
-      matrix:
-        os: [Windows-latest, ubuntu-latest, macOS-latest]
-      fail-fast: false
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     env:
       DOTNET_CONFIGURATION: Release
-
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
     - name: Setup Runtimes, Caching
       uses: ./.github/actions/setup-runtimes-caching
       with:
-        name: "Full"
-
-    - name: Restore dependencies
-      run: dotnet restore
+        name: "Build"
 
     - name: Build
-      run: dotnet build --configuration ${{ env.DOTNET_CONFIGURATION }}
+      run: >
+        dotnet build --configuration ${{ env.DOTNET_CONFIGURATION }} 
+        /p:ContinuousIntegrationBuild=true 
+        /p:Deterministic=true
 
+  # Multi-OS test job to verify Span/Memory performance on different kernels
   test:
-    uses: ./.github/workflows/test.yml
     needs: build
-
-  package:
-    uses: ./.github/workflows/package.yml
-    needs: test
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+      fail-fast: false
+    uses: ./.github/workflows/test.yml
     with:
-      version_suffix: 'beta.${{ github.run_number }}'
-    if: ${{ github.actor != 'dependabot[bot]' }}
+      runs_on: ${{ matrix.os }}
 
+  # Package job with conditional versioning
+  package:
+    needs: test
+    if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
+    uses: ./.github/workflows/package.yml
+    with:
+      # If manual release is triggered, suffix is empty. Otherwise, it's preview.X
+      version_suffix: ${{ (github.event.inputs.isRelease == 'true') && '' || format('preview.{0}', github.run_number) }}
+
+  # Final publishing to NuGet
   publish-nuget:
-    runs-on: ubuntu-latest
     needs: package
+    runs-on: ubuntu-latest
+    environment: production # Use for OIDC/Trusted Publishing and approvals
     steps:
     - name: Download packages
       uses: actions/download-artifact@v8

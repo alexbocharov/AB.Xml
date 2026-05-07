@@ -1,20 +1,41 @@
 <Project>
-
+  <!-- Import versioning properties from the eng folder -->
   <Import Project="eng/Versions.props" />
 
   <PropertyGroup>
-    <Copyright>Copyright (c) 2025 Alexander Bocharov</Copyright>
+    <!-- Basic Brand Metadata -->
+    <Company>ABForge</Company>
     <Authors>Alexander Bocharov</Authors>
-    <Company>AB</Company>
-    <PackageProjectUrl>https://github.com/alexbocharov/AB.Xml</PackageProjectUrl>
+    <Copyright>Copyright (c) $([System.DateTime]::Now.Year) Alexander Bocharov</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!-- Dynamic URLs that adapt to the repository name -->
+    <PackageProjectUrl>https://github.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    
+    <!-- Compilation and Debug Standards -->
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    
+    <!-- Native AOT and Advanced Analysis -->
+    <!-- Enable AOT compatibility analysis only for supported frameworks -->
+    <IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>
-    <ArtifactsPath>$(MSBuildThisFileDirectory)\artifacts</ArtifactsPath>
+    <!-- Centralized output for all build artifacts -->
+    <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
+  </PropertyGroup>
+
+  <!-- Automated Package Identification -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <PackageId Condition="!$(MSBuildProjectName.StartsWith('ABForge.'))">ABForge.$(MSBuildProjectName)</PackageId>
+    <PackageId Condition="$(MSBuildProjectName.StartsWith('ABForge.'))">$(MSBuildProjectName)</PackageId>
   </PropertyGroup>
 </Project>

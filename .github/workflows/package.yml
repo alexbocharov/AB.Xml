@@ -1,11 +1,13 @@
 name: NuGet Packages
+
 on:
   workflow_call:
     inputs:
       version_suffix:
         required: false
         type: string
-        default: 'alpha.${{ github.run_number }}'
+        # Recommended: default to empty or a safe 'preview' tag
+        default: '' 
       validate_version:
         required: false
         type: boolean
@@ -18,40 +20,51 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0 # Required for accurate versioning in 2026
 
     - name: Setup Runtimes, Caching
       uses: ./.github/actions/setup-runtimes-caching
       with:
-        name: "Full"
+        name: "Package"
 
-    - name: Get git tag
+    - name: Extract Tag
       id: git_tag
-      run: "echo tag=${GITHUB_REF#refs/tags/v} >> $GITHUB_OUTPUT"
+      shell: bash
+      run: echo "tag=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-    - name: Publish NuGet package
+    - name: Dotnet Pack
+      shell: bash
       run: |
-        PACK_ARGS="--configuration ${{ env.DOTNET_CONFIGURATION }} --output ./artifacts -p:CI=true"
+        # Standard pack arguments for ABForge ecosystem
+        # ContinuousIntegrationBuild=true is essential for SourceLink
+        PACK_ARGS="--configuration ${{ env.DOTNET_CONFIGURATION }} --output ./artifacts /p:ContinuousIntegrationBuild=true"
 
+        # Logic for Stable Releases (triggered by tags)
         if [ "${{ inputs.validate_version }}" = "true" ]; then
-          PACK_ARGS="$PACK_ARGS -p:PackageVersion=${{ steps.git_tag.outputs.tag }} -p:ReleaseBuild=true"
-        fi
-
-        if [ -n "${{ inputs.version_suffix }}" ]; then
-          PACK_ARGS="$PACK_ARGS -p:VersionSuffix=${{ inputs.version_suffix }}"
+          echo "Packaging stable version: ${{ steps.git_tag.outputs.tag }}"
+          PACK_ARGS="$PACK_ARGS /p:PackageVersion=${{ steps.git_tag.outputs.tag }}"
+        
+        # Logic for Preview/Beta builds (if suffix provided)
+        elif [ -n "${{ inputs.version_suffix }}" ]; then
+          echo "Packaging with suffix: ${{ inputs.version_suffix }}"
+          PACK_ARGS="$PACK_ARGS --version-suffix ${{ inputs.version_suffix }}"
         fi
 
         dotnet pack $PACK_ARGS
 
-    - name: Publish NuGet packages as artifacts
-      uses: actions/upload-artifact@v7
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v8
       with:
         name: nuget-packages
         if-no-files-found: error
         path: artifacts/*.nupkg
 
-    - name: List NuGet packages in step summary
+    - name: Summary
+      shell: bash
       run: |
-        GITHUB_SUMMARY=$(find artifacts -type f -name '*.nupkg' -exec basename {} \;)
-        echo "## NuGet packages:" >> $GITHUB_STEP_SUMMARY
-        echo "$GITHUB_SUMMARY" >> $GITHUB_STEP_SUMMARY
+        echo "## 📦 ABForge NuGet Packages" >> $GITHUB_STEP_SUMMARY
+        echo "The following packages were generated during this run:" >> $GITHUB_STEP_SUMMARY
+        find artifacts -type f -name '*.nupkg' -exec basename {} \; | sed 's/^/- /' >> $GITHUB_STEP_SUMMARY

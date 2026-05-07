@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>High-performance XML serialization and deserialization toolkit for modern .NET applications.</Description>
+    <AdditionalPackageTags>xml;serialization;fast-xml</AdditionalPackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

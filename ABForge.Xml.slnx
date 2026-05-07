@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ABForge.Xml/ABForge.Xml.csproj" />
+    <Project Path="src/ABForge.Xml.Generators/ABForge.Xml.Generators.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ABForge.Xml.Tests/ABForge.Xml.Tests.csproj" />
+  </Folder>
+</Solution>

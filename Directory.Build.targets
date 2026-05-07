@@ -1,11 +1,13 @@
 <Project>
   <PropertyGroup>
+    <!-- Locate and verify README.md for NuGet packaging -->
     <ReadmePath>$(MSBuildProjectDirectory)\README.md</ReadmePath>
     <ReadmeExists Condition="Exists('$(ReadmePath)')">true</ReadmeExists>
     <PackageReadmeFile Condition="'$(PackageReadmeFile)' == '' And '$(ReadmeExists)' == 'true'">README.md</PackageReadmeFile>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(ReadmeExists)' == 'true'">
-    <None Include="$(ReadmePath)" Pack="true" PackagePath="\" />
+  <ItemGroup>
+    <!-- Automatically pack README.md if it exists in the project folder -->
+    <None Include="$(ReadmePath)" Pack="true" PackagePath="\" Condition="'$(ReadmeExists)' == 'true'" />
   </ItemGroup>
 </Project>
