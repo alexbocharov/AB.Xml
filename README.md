@@ -1,7 +1,7 @@
 # ABForge.Xml
 
 [![Build Main](https://github.com/alexbocharov/ABForge.Xml/actions/workflows/build-main.yml/badge.svg)](https://github.com/alexbocharov/ABForge.Xml/actions/workflows/build-main.yml)
-![NuGet Version](https://img.shields.io/nuget/vpre/ABForge.Xml?color=blue&label=nuget%20(preview))
+![NuGet Version](https://img.shields.io/nuget/v/ABForge.Xml?color=blue&label=nuget)
 ![Target](https://img.shields.io/badge/target-.NET%2010-blue)
 
 **ABForge.Xml** is a high-performance XML serialization library for modern .NET, designed with **Native AOT** and **Low-Allocation** patterns in mind. It provides a developer-friendly API similar to Newtonsoft.Json while maintaining the performance requirements of 2026's cloud-native applications.
