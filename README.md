@@ -4,40 +4,62 @@
 [![NuGet Version](https://img.shields.io/nuget/v/ABForge.Xml?color=blue&label=nuget)](https://www.nuget.org/packages/ABForge.Xml/)
 [![Target](https://img.shields.io/badge/target-.NET%2010-blue)](https://dotnet.microsoft.com/)
 
-**ABForge.Xml** is a high-performance XML serialization library for modern .NET, designed with **Native AOT** and **Low-Allocation** patterns in mind. It provides a developer-friendly API similar to Newtonsoft.Json while maintaining the performance requirements of 2026's cloud-native applications.
+**ABForge.Xml** is a high-performance XML serialization and deserialization library for modern .NET. It is designed from the ground up for **Native AOT** compatibility and cloud-native workloads.
 
-## Key Features
+## Features
 
-- **Native AOT Ready**: No runtime Reflection.Emit. Uses source generation and static analysis.
-- **Performance**: Optimized for `Span<byte>` and `IBufferWriter<byte>` to minimize GC pressure.
-- **Aspire Integration**: Seamlessly connects with .NET Aspire orchestration for configuration and logging.
-- **Modern API**: Simple `XmlConvert.Serialize` / `Deserialize` methods with flexible settings.
+- 🚀 **Native AOT Ready**: No reflection-based serialization at runtime. 
+- 🛠️ **Source Generation**: Leverages Incremental Source Generators for compile-time safety and speed.
+- 📉 **Low Allocation**: Optimized memory usage with `Span<T>` and `IBufferWriter<byte>` support.
+- 📦 **.NET Aspire Ready**: Designed to work seamlessly in distributed environments.
 
-## Installation
+## Getting Started
 
-```bash
+### Installation
+
+Install the package via NuGet CLI:
+
+```dotnetcli
 dotnet add package ABForge.Xml
 ```
 
-## Quick Start
+### Basic Usage (AOT-Safe)
+
+1. Decorate your model with the `[GenerateXmlSerializer]` attribute:
 
 ```csharp
 using ABForge.Xml;
 
-var myObject = new MyData { Name = "ABForge", Value = 2026 };
-
-// Serialize to byte array (AOT-safe)
-byte[] xmlData = XmlConvert.Serialize(myObject);
-
-// Deserialize back
-var restored = XmlConvert.Deserialize<MyData>(xmlData);
+[GenerateXmlSerializer]
+public partial class UserProfile
+{
+    public required string Name { get; set; }
+    public int Age { get; set; }
+}
 ```
 
-## Roadmap
+2. Serialize using the generated serializer:
 
-- [ ] Source Generator for XML schemas.
-- [ ] Async streaming for large XML documents.
-- [ ] .NET Aspire Component wrapper.
+```csharp
+var profile = new UserProfile { Name = "Alexander", Age = 30 };
+
+// Using the automatically generated UserProfileXmlSerializer
+byte[] data = XmlConvert.Serialize(profile, new UserProfileXmlSerializer());
+```
+
+## Advanced Scenarios
+
+The library supports `ReadOnlySpan<byte>` for ultra-fast deserialization:
+
+```csharp
+ReadOnlySpan<byte> xmlData = ...;
+var profile = XmlConvert.Deserialize(xmlData, new UserProfileXmlSerializer());
+```
+
+## Feedback & Contributing
+
+We welcome contributions! Please visit our GitHub repository:
+[https://github.com/alexbocharov/ABForge.Xml](https://github.com/alexbocharov/ABForge.Xml)
 
 ## License
 
