@@ -15,7 +15,8 @@ jobs:
   test:
     runs-on: ${{ inputs.runs_on }}
     steps:
-    - uses: actions/checkout@v6
+    - name: Checkout
+      uses: actions/checkout@v6
 
     - name: Setup Runtimes, Caching
       uses: ./.github/actions/setup-runtimes-caching
@@ -23,8 +24,8 @@ jobs:
         name: "Test"
 
     - name: Run tests
-      # We use --no-build because the project was already built in build-main.yml
-      # Note: This requires artifacts download if build and test are in separate jobs
+      # We removed --no-restore and --no-build to ensure project.assets.json 
+      # is generated on the fresh CI runner since artifacts/obj is gitignored.
       run: >-
         dotnet test 
         --configuration ${{ inputs.configuration }}
@@ -34,14 +35,12 @@ jobs:
         --blame-hang-timeout 5m
         --results-directory testresults
         --collect "XPlat Code Coverage"
-        --no-restore
         -- RunConfiguration.CollectSourceInformation=true
 
     - name: Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
-        # Unique name for each OS to prevent overwriting
         name: test-results-${{ inputs.runs_on }}
         path: testresults/**/*.trx
 
@@ -49,5 +48,6 @@ jobs:
       if: always()
       uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_TOKEN }} # Required for private repos
+        # Token is optional for public repos but recommended for ABForge stability
+        token: ${{ secrets.CODECOV_TOKEN }} 
         fail_ci_if_error: false
