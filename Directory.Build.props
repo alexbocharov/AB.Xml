@@ -10,8 +10,8 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     
     <!-- Dynamic URLs that adapt to the repository name -->
-    <PackageProjectUrl>https://github.com</PackageProjectUrl>
-    <RepositoryUrl>https://github.com</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/alexbocharov/ABForge.Xml</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/alexbocharov/ABForge.Xml</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     
     <!-- Compilation and Debug Standards -->
